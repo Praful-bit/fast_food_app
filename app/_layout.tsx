@@ -2,8 +2,27 @@ import { SplashScreen, Stack } from "expo-router";
 import "./global.css";
 import { useFonts } from 'expo-font';
 import { useEffect } from "react";
+import * as Sentry from '@sentry/react-native';
+import useAuthStore from "@/store/auth.store";
 
-export default function RootLayout() {
+Sentry.init({
+  dsn: 'https://318d9ef495ead3ce482fc40b2133483c@o4509646400389120.ingest.us.sentry.io/4509646422409216',
+
+  // Adds more context data to events (IP address, cookies, user, etc.)
+  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
+  sendDefaultPii: true,
+
+  // Configure Session Replay
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1,
+  integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
+
+  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+  // spotlight: __DEV__,
+});
+
+export default Sentry.wrap(function RootLayout() {
+  const {isLoading, fetchAuthenticatedUser} = useAuthStore();
   const [fontsLoaded, error] = useFonts({
     "QuickSand-Bold": require("../assets/fonts/Quicksand-Bold.ttf"),
     "QuickSand-Medium": require("../assets/fonts/Quicksand-Medium.ttf"),
@@ -19,7 +38,13 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, error]);
 
+  useEffect(()=>{
+   fetchAuthenticatedUser()
+  },[])
+
+  if(!fontsLoaded || isLoading)return null;
+
   // if (!fontsLoaded) return null; // Don't render UI until fonts are ready
 
   return <Stack screenOptions={{ headerShown: false }} />;
-}
+});
