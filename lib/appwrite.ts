@@ -1,12 +1,17 @@
-import { CreateUserPrams, SignInParams } from "@/type";
-import { Account, Avatars, Client, Databases, ID, Query, Storage } from "react-native-appwrite"
+import { CreateUserPrams, GetMenuParams, SignInParams } from "@/type";
+import { Account, Avatars, Client, Databases, ID, Query, Storage } from "react-native-appwrite";
 
 export const appwriteConfig = {
     endpoint: process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT!,
     projectId: process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID!,
     platform: "com.pg.foodordering",
     databaseId: "686ba6950015cd406b07",
-    userCollectionId: "686ba701003d91149fd8"
+    bucketId: "6873a20b000c1ca3402b",
+    userCollectionId: "686ba701003d91149fd8",
+    categoriesCollectionId: "68739dad0036d87019a1",
+    menuCollectionId: "6873f0cf002479a5c7c1",
+    customizationsCollectionId: "68739fd000342874c897",
+    menuCustomizationCollectionId: "6873a0eb0001150a00b6"
 }
 
 export const client = new Client();
@@ -24,7 +29,7 @@ export const storage = new Storage(client);
 export const createUser = async ({ email, password, name }: CreateUserPrams) => {
     try {
         const newAccount = await account.create(ID.unique(), email, password, name)
-        if(!newAccount) throw Error;
+        if (!newAccount) throw Error;
 
         await signIn({ email, password });
 
@@ -52,7 +57,7 @@ export const signIn = async ({ email, password }: SignInParams) => {
 export const getCurrentUser = async () => {
     try {
         const currentAccount = await account.get();
-        if(!currentAccount) throw Error;
+        if (!currentAccount) throw Error;
 
         const currentUser = await databases.listDocuments(
             appwriteConfig.databaseId,
@@ -60,7 +65,7 @@ export const getCurrentUser = async () => {
             [Query.equal('accountId', currentAccount.$id)]
         )
 
-        if(!currentUser) throw Error;
+        if (!currentUser) throw Error;
 
         return currentUser.documents[0];
     } catch (e) {
@@ -70,34 +75,34 @@ export const getCurrentUser = async () => {
 }
 
 
-// export const getMenu = async ({ category, query }: GetMenuParams) => {
-//     try {
-//         const queries: string[] = [];
+export const getMenu = async ({ category, query }: GetMenuParams) => {
+    try {
+        const queries: string[] = [];
 
-//         if(category) queries.push(Query.equal('categories', category));
-//         if(query) queries.push(Query.search('name', query));
+        if(category) queries.push(Query.equal('categories', category));
+        if(query) queries.push(Query.search('name', query));
 
-//         const menus = await databases.listDocuments(
-//             appwriteConfig.databaseId,
-//             appwriteConfig.menuCollectionId,
-//             queries,
-//         )
+        const menus = await databases.listDocuments(
+            appwriteConfig.databaseId,
+            appwriteConfig.menuCollectionId,
+            queries,
+        )
 
-//         return menus.documents;
-//     } catch (e) {
-//         throw new Error(e as string);
-//     }
-// }
+        return menus.documents;
+    } catch (e) {
+        throw new Error(e as string);
+    }
+}
 
-// export const getCategories = async () => {
-//     try {
-//         const categories = await databases.listDocuments(
-//             appwriteConfig.databaseId,
-//             appwriteConfig.categoriesCollectionId,
-//         )
+export const getCategories = async () => {
+    try {
+        const categories = await databases.listDocuments(
+            appwriteConfig.databaseId,
+            appwriteConfig.categoriesCollectionId,
+        )
 
-//         return categories.documents;
-//     } catch (e) {
-//         throw new Error(e as string);
-//     }
-// }
+        return categories.documents;
+    } catch (e) {
+        throw new Error(e as string);
+    }
+}
